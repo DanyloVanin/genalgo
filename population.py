@@ -1,12 +1,13 @@
 import os
 import random
+from statistics import mean
 
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from statistics import mean
-import matplotlib.pyplot as plt
-from chromosome import Chromosome
-from constants import N, EPS
+
+from individual import Individual
+from constants import N, DESIRED_GENE_HOMOGENEITY_LEVEL
 
 
 def all_the_same(elements):
@@ -20,12 +21,12 @@ def verify_genes_homogeneity(chromosomes):
         for chromosome in chromosomes:
             genes.append(chromosome.code[i])
         ones = genes.count('1')
-        if 0.99 > ones/num_individuals > 0.01:
+        if DESIRED_GENE_HOMOGENEITY_LEVEL > ones / num_individuals > (1.0 - DESIRED_GENE_HOMOGENEITY_LEVEL):
             return False
     return True
 
 
-mutation_table = {
+MUTATION_TABLE = {
     # L, N   : P_mutation
     # L = 10, N = ...
     (10, 100): 0.0005,
@@ -45,12 +46,13 @@ mutation_table = {
 
 
 class Population:
-    def __init__(self, chromosomes, p_m, p_crossover):
-        self.chromosomes = chromosomes
-        self.fitness_list = [chromosome.fitness for chromosome in self.chromosomes]
-        self.genotypes_list = [list(x.code) for x in self.chromosomes]
-        self.p_m = p_m
-        self.p_crossover = p_crossover
+    def __init__(self, chromosomes, mutation_enabled=False, crossover_enabled=False):
+        self.individuals = chromosomes
+        self.fitness_list = [chromosome.fitness for chromosome in self.individuals]
+        # TODO Why is genotype converted into list from string?
+        self.genotypes_list = [list(x.code) for x in self.individuals]
+        self.mutation_enabled = mutation_enabled
+        self.crossover_enabled = crossover_enabled
 
     def print_fenotypes_distribution(self, folder_name, func_name, run, iteration):
         path = 'stats/' + folder_name + '/' + str(N) + '/' + func_name + '/' + str(run) + '/fenotypes'
@@ -68,50 +70,32 @@ class Population:
         if not os.path.exists(path):
             os.makedirs(path)
 
-        x_list = [fitness_func.get_genotype_value(code) for code in self.genotypes_list]
+        # TODO temporary fix for genotype being list and not str
+        x_list = [(fitness_func.get_genotype_value(''.join(code))) for code in self.genotypes_list]
         sns.displot(x_list)
         plt.savefig(path + '/' + str(iteration) + '.png')
         plt.close()
 
-    def estimate_convergence(self, avg_fitness_list=None, last_n=None):
-        if self.p_m == 0:
+    def is_converged(self):
+        # За відсутності мутації: збіжність популяції в одну точку або проведення 10 000 000 ітерацій.
+        if not self.mutation_enabled:
             return all_the_same(self.genotypes_list)
         else:
-
-            # TODO гомогенність популяції по кожному гену на 99%
-            return verify_genes_homogeneity(self.chromosomes)
-            #
-            # if avg_fitness_list is None or last_n is None or len(avg_fitness_list) < last_n:
-            #     return False
-            #
-            # last_n_avg_fitness_list = avg_fitness_list[-last_n:]
-            # last_n_diff = []
-            #
-            # for i in range(1, len(last_n_avg_fitness_list)):
-            #     curr = last_n_avg_fitness_list[i]
-            #     prev = last_n_avg_fitness_list[i - 1]
-            #     last_n_diff.append(abs(curr - prev))
-            #
-            # return all(x <= EPS for x in last_n_diff)
+            # за наявності мутації гомогенність популяції по кожному гену на 99%
+            return verify_genes_homogeneity(self.individuals)
 
     def mutate(self, fitness_function):
-        """
-        Mutation logic
-        Uses mutation_probability parameter - p_m
-        :param fitness_function:
-        :return:
-        """
         # Check if mutation is enabled
-        if self.p_m == 0:
+        if not self.mutation_enabled:
             return
 
         # Get mutation probability
-        code_length = len(self.chromosomes[0].code)  # L
-        number_of_individuals = len(self.chromosomes)  # N
-        mutation_probability = mutation_table[(code_length, number_of_individuals)]
+        code_length = len(self.individuals[0].code)  # L
+        number_of_individuals = len(self.individuals)  # N
+        mutation_probability = MUTATION_TABLE[(code_length, number_of_individuals)]
 
         # randomly change bits in each chromosome
-        for chromosome in self.chromosomes:
+        for chromosome in self.individuals:
             for i in range(0, len(chromosome.code)):
                 if random.random() < mutation_probability:
                     chromosome.code[i] = int(not chromosome.code[i])
@@ -121,12 +105,12 @@ class Population:
     # Perform crossover
     def crossover(self, fitness_function):
         # Skip crossover if probability 0
-        if self.p_crossover == 0:
+        if not self.crossover_enabled:
             return
 
         next_chromosomes = []
 
-        chromosomes = self.chromosomes.copy()
+        chromosomes = self.individuals.copy()
 
         def pop_random_chromosome():
             index = random.randrange(0, len(chromosomes))
@@ -144,12 +128,12 @@ class Population:
             child2_code = chromosome2_code[:crossover_point] + chromosome1_code[crossover_point:]
 
             next_chromosomes.append(
-                Chromosome(child1_code, fitness_function.estimate(child1_code), len(next_chromosomes)))
+                Individual(child1_code, fitness_function.estimate(child1_code), len(next_chromosomes)))
             next_chromosomes.append(
-                Chromosome(child2_code, fitness_function.estimate(child2_code), len(next_chromosomes)))
+                Individual(child2_code, fitness_function.estimate(child2_code), len(next_chromosomes)))
 
         assert (len(chromosomes) == len(next_chromosomes))
-        self.chromosomes = next_chromosomes
+        self.individuals = next_chromosomes
         self.update()
 
     def get_mean_fitness(self):
@@ -167,28 +151,28 @@ class Population:
         return np.std(self.fitness_list)
 
     def get_unique_chromosomes_count(self):
-        return len(set([chromosome.key for chromosome in self.chromosomes]))
+        return len(set([chromosome.key for chromosome in self.individuals]))
 
     def get_keys_list(self):
-        return list([chromosome.key for chromosome in self.chromosomes])
+        return list([chromosome.key for chromosome in self.individuals])
 
     def get_chromosomes_copies_count(self, chromosome_genotype):
         return self.genotypes_list.count(chromosome_genotype)
 
     def update(self):
-        self.fitness_list = [chromosome.fitness for chromosome in self.chromosomes]
-        self.genotypes_list = [list(x.code) for x in self.chromosomes]
+        self.fitness_list = [chromosome.fitness for chromosome in self.individuals]
+        # TODO genotype as list again
+        self.genotypes_list = [list(x.code) for x in self.individuals]
 
-    # TODO need to check this one, probably should be moved out of here
     def update_rws(self, probabilities):
-        self.chromosomes = [np.random.choice(self.chromosomes, p=probabilities) for _ in
-                            range(0, len(self.chromosomes))]
+        self.individuals = [np.random.choice(self.individuals, p=probabilities) for _ in
+                            range(0, len(self.individuals))]
         self.update()
 
     def update_chromosomes(self, chromosomes):
-        self.chromosomes = chromosomes
+        self.individuals = chromosomes
         self.update()
 
     def __copy__(self):
-        return Population(self.chromosomes.copy(), self.p_m.copy())
+        return Population(self.individuals.copy(), self.mutation_enabled, self.crossover_enabled)
 # %%

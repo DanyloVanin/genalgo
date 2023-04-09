@@ -44,14 +44,9 @@ def main(fitness_function, selection_functions: [], file_name, *args):
         for selection_function in selection_functions:
             sf_name = selection_function.__name__
 
-            if selection_function == WindowRWS or selection_function == WindowSUS:
-                sf = selection_function(2)
-            else:
-                sf = selection_function()
-
-            optimal = fitness_function.get_optimal(*args, i=i)
+            # optimal = fitness_function.get_optimal(*args, i=i)
             folder_name = file_name if file_name is not None else ff_name
-            current_run = EvoAlgorithm(Population(p.chromosomes.copy(), p.p_m), sf, fitness_function, optimal).run(i,
+            current_run = EvoAlgorithm(Population(p.individuals.copy(), p.p_m), selection_function, fitness_function).run(i,
                                                                                                                    folder_name,
                                                                                                                    5)
             save_run_plots(folder_name, sf_name, current_run, i)
@@ -85,8 +80,8 @@ def main_noise(selection_functions: []):
             else:
                 sf = selection_function()
 
-            ns = EvoAlgorithm.calculate_noise(sf)
-            runs_dict[sf_name].runs.append(Run(noise_stats=ns))
+            # ns = EvoAlgorithm.calculate_noise(sf)
+            # runs_dict[sf_name].runs.append(Run(noise_stats=ns))
 
     for selection_function in selection_functions:
         runs_dict[selection_function.__name__].calculate_noise_stats()

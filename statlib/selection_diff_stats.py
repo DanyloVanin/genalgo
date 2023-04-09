@@ -1,6 +1,9 @@
 from statistics import mean
 
 
+# Різниця відбору – величина s = fs_avg - f_avg
+# f_avg – середнє значення коефіцієнта пристосованості особин популяції
+# fs_avg – середнє значення коефіцієнта пристосованості відібраних до батьківського пулу особин.
 class SelectionDiffStats:
     def __init__(self):
         self.s_list = []
@@ -11,10 +14,13 @@ class SelectionDiffStats:
         self.s_avg = None
 
     def calculate(self):
+        # мінімальна різниця відбору та номер ітерації, за якої вона спостерігалась
         self.s_min = min(self.s_list)
-        self.ni_s_min = self.s_list.index(self.s_min)
+        self.ni_s_min = self.s_list.index(self.s_min) + 1
+        # максимальна різниця відбору та номер ітерації, за якої вона спостерігалась
         self.s_max = max(self.s_list)
-        self.ni_s_max = self.s_list.index(self.s_max)
+        self.ni_s_max = self.s_list.index(self.s_max) + 1
+        # середня різниця відбору за всі ітерації
         self.s_avg = mean(self.s_list)
 
     def __str__(self):
@@ -24,4 +30,4 @@ class SelectionDiffStats:
     def as_dict(self):
         return {'s_min': [self.s_min], 'NI_s_min': [self.ni_s_min],
                 's_max': [self.s_max], 'NI_s_max': [self.ni_s_max], 's_avg': [self.s_avg]}
-#%%
+# %%

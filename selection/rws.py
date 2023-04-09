@@ -1,6 +1,6 @@
 from population import Population
 from statistics import mean
-from constants import G
+from constants import MAX_ITERATIONS
 import math
 
 
@@ -12,7 +12,7 @@ class RWS:
         if population_fitness == 0:
             return population
 
-        probabilities = [chromosome.fitness / population_fitness for chromosome in population.chromosomes]
+        probabilities = [chromosome.fitness / population_fitness for chromosome in population.individuals]
         population.update_rws(probabilities)
 
         return population
@@ -96,7 +96,7 @@ class WindowRWS:
         fh_worst = min(self.fh_worst_list)
         scaled_fitness = []
 
-        for chromosome in population.chromosomes:
+        for chromosome in population.individuals:
             scaled_value = chromosome.fitness - fh_worst
             scaled_fitness.append(scaled_value)
 
@@ -106,7 +106,7 @@ class WindowRWS:
             probabilities = [sf / sf_sum for sf in scaled_fitness]
         else:
             population_fitness = sum(population.fitness_list)
-            probabilities = [chromosome.fitness / population_fitness for chromosome in population.chromosomes]
+            probabilities = [chromosome.fitness / population_fitness for chromosome in population.individuals]
 
         population.update_rws(probabilities)
 
@@ -128,7 +128,7 @@ class ExpScaledRWS:
 
         scaled_fitness = []
 
-        for chromosome in population.chromosomes:
+        for chromosome in population.individuals:
             scaled_value = math.pow(chromosome.fitness, self.k)
             scaled_fitness.append(scaled_value)
 
@@ -139,7 +139,7 @@ class ExpScaledRWS:
         else:
             # TODO for some reason we do not scale if sum is 0
             population_fitness = sum(population.fitness_list)
-            probabilities = [chromosome.fitness / population_fitness for chromosome in population.chromosomes]
+            probabilities = [chromosome.fitness / population_fitness for chromosome in population.individuals]
 
         # TODO should probably move that method out of Population class
         population.update_rws(probabilities)
@@ -151,23 +151,23 @@ class ExpScaledRWS:
 
 
 class WindowRWS_2H(WindowRWS):
-    def __init__(self, h: 2):
+    def __init__(self, h= 2):
         super().__init__(h)
 
 
 class WindowRWS_10H(WindowRWS):
-    def __init__(self, h: 10):
+    def __init__(self, h=10):
         super().__init__(h)
 
 
 class ExpScaledRWS_1_005K(ExpScaledRWS):
 
-    def __init__(self, k: 1.005):
+    def __init__(self, k=1.005):
         super().__init__(k)
 
 
 class ExpScaledRWS_1_05K(ExpScaledRWS):
 
-    def __init__(self, k: 1.05):
+    def __init__(self, k=1.05):
         super().__init__(k)
 # %%

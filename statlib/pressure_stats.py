@@ -1,8 +1,5 @@
 from statistics import mean
-
-
-def s(fs, f):
-    return fs - f
+from constants import EPS
 
 
 class PressureStats:
@@ -26,8 +23,10 @@ class PressureStats:
 
     def __str__(self):
         return ("\nNI: " + str(self.NI) + "\nF found: " + str(self.f_found) + "\nF avg: " + str(self.f_avg) +
-                "\nI min: " + str(self.i_min) + "\nNI I min: " + str(self.i_imin) + "\nI max: " + str(self.i_max) + "\nNI I max: " + str(self.i_imax) +
-                "\nGR early: " + str(self.gre) + "\nGR avg: " + str(self.gra) + "\nGR late: " + str(self.grl) + "\nNI GR late: " + str(self.grli))
+                "\nI min: " + str(self.i_min) + "\nNI I min: " + str(self.i_imin) + "\nI max: " + str(
+                    self.i_max) + "\nNI I max: " + str(self.i_imax) +
+                "\nGR early: " + str(self.gre) + "\nGR avg: " + str(self.gra) + "\nGR late: " + str(
+                    self.grl) + "\nNI GR late: " + str(self.grli))
 
     def as_dict(self):
         return {'NI': [self.NI], 'F_found': [self.f_found], 'F_avg': [self.f_avg],
@@ -39,15 +38,19 @@ class PressureStats:
     def calculate_intensity_coefficients(self):
         nni = [x for x in self.intensities if x is not None]
         if len(nni) > 0:
+            # мінімальна інтенсивність та номер ітерації, за якої вона спостерігалась
             self.i_min = min(nni)
+            self.i_imin = self.intensities.index(self.i_min) + 1
+            # максимальна інтенсивність та номер ітерації, за якої вона спостерігалась
             self.i_max = max(nni)
+            self.i_imax = self.intensities.index(self.i_max) + 1
+            # середня інтенсивність за всі ітерації
             self.i_avg = mean(nni)
-            self.i_imin = self.intensities.index(self.i_min)
-            self.i_imax = self.intensities.index(self.i_max)
 
     def calculate_growth_rate_coefficients(self):
         if len(self.grs) > 0:
-            self.gre = self.grs[1]
+            # відповідно рання та середня швидкості росту
+            self.gre = self.grs[1]  # iteration = 2, therefor index is 1
             self.gra = mean(self.grs)
 
     def calculate(self):
@@ -56,14 +59,17 @@ class PressureStats:
 
     @staticmethod
     def calculate_intensity(fs, f, std):
-        if fs is None or f is None or std is None or std == 0:
+        # Якщо σ = 0, то покласти I=1.
+        if std == 0:
+            return 1
+        if fs is None or f is None or std is None:
             return None
-        return s(fs, f) / std
+        return (fs - f) / std
 
     @staticmethod
     def calculate_growth_rate(current, previous, f_best_current, f_best_previous):
-        if f_best_current == f_best_previous and previous > 0:
+        if abs(f_best_current - f_best_previous) < EPS and previous > 0:
             return current / previous
         else:
             return 0
-#%%
+# %%
