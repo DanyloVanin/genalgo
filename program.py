@@ -1,14 +1,12 @@
-from constants import MAX_RUNS
-from run import Run
-from statlib.runs_stats import RunsStats
-from selection.rws import WindowRWS
-from evoalgorithm import EvoAlgorithm
-from population import Population
-from statlib.excel import save_to_excel, save_noise_to_excel
-from selection.sus import WindowSUS
-from statlib.plots import *
-import time
 import copy
+import time
+
+from constants import MAX_RUNS, ITERATIONS_TO_PLOT, RUNS_TO_PLOT
+from evoalgorithm import EvoAlgorithm
+from statlib.excel import save_to_excel, save_noise_to_excel
+from statlib.plots import *
+from statlib.runs_stats import RunsStats
+
 
 def save_run_plots(ff_name, sf_name, run, run_number):
     save_line_plot(ff_name, sf_name, run.avg_fitness_list, 'f_avg' + str(run_number + 1), 'f avg', run_number + 1)
@@ -30,34 +28,51 @@ def save_run_plots(ff_name, sf_name, run, run_number):
                    'best chromosome rate', run_number + 1)
 
 
-def main(fitness_function, selection_functions: [], file_name, population_size, mutation_enabled=False, crossover_enabled=False):
+def main(fitness_function, selection_functions: [], file_name, population_size):
     p_start = time.time()
     runs_dict = {}
     ff_name = fitness_function.__class__.__name__
 
+    # Initializing run statistics
     for selection_function in selection_functions:
-        runs_dict[selection_function.__name__] = RunsStats()
+        for mutation_enabled in [True, False]:
+            for crossover_enabled in [True, False]:
+                key = (selection_function.__name__, mutation_enabled, crossover_enabled)
+                runs_dict[key] = RunsStats()
 
     for i in range(0, MAX_RUNS):
         p = fitness_function.generate_population(population_size)
 
         for selection_function in selection_functions:
             sf_name = selection_function.__name__
+            for mutation_enabled in [True, False]:
+                for crossover_enabled in [True, False]:
+                    key = (selection_function.__name__, mutation_enabled, crossover_enabled)
+                    # Creating file_name
+                    folder_name = file_name if file_name is not None else ff_name
+                    folder_name += '_mutation' if mutation_enabled else ''
+                    folder_name += '_crossover' if crossover_enabled else ''
 
-            folder_name = file_name if file_name is not None else ff_name
-            folder_name += '_mutation' if mutation_enabled else ''
-            folder_name += '_crossover' if crossover_enabled else ''
-            current_run = EvoAlgorithm(copy.copy(p), selection_function(), fitness_function,
-                                       mutation_enabled, crossover_enabled).run(i, folder_name, 5)
-            save_run_plots(folder_name, sf_name, current_run, i)
-            runs_dict[sf_name].runs.append(current_run)
+                    # Running the algorithm
+                    population_copy = copy.copy(p)
+                    current_run = EvoAlgorithm(population_copy, selection_function(), fitness_function,
+                                               mutation_enabled, crossover_enabled).run(i, folder_name, ITERATIONS_TO_PLOT)
+
+                    if i < RUNS_TO_PLOT:
+                        # TODO rewrite for proper and consistent scaling
+                        save_run_plots(folder_name, sf_name, current_run, i)
+                    runs_dict[key].runs.append(current_run)
 
     for selection_function in selection_functions:
-        runs_dict[selection_function.__name__].calculate()
+        for mutation_enabled in [True, False]:
+            for crossover_enabled in [True, False]:
+                # TODO add assertion for number of runs being equal to number of runs
+                key = (selection_function.__name__, mutation_enabled, crossover_enabled)
+                runs_dict[key].calculate()
 
+    # Generating filename
     excel_name = file_name if file_name is not None else ff_name
-    excel_name += '_mutation' if mutation_enabled else ''
-    excel_name += '_crossover' if crossover_enabled else ''
+    # TODO check this method
     save_to_excel(runs_dict, excel_name)
 
     p_end = time.time()
@@ -66,7 +81,7 @@ def main(fitness_function, selection_functions: [], file_name, population_size, 
     return file_name, runs_dict
 
 
-def main_noise(selection_functions: []):
+def main_noise(selection_functions: [], population_size):
     p_start = time.time()
     runs_dict = {}
     file_name = 'FConstAll'
@@ -78,7 +93,7 @@ def main_noise(selection_functions: []):
         for selection_function in selection_functions:
             sf_name = selection_function.__name__
 
-            #ns = EvoAlgorithm.calculate_noise(sf)
+            ns = EvoAlgorithm.calculate_noise(selection_function)
             # runs_dict[sf_name].runs.append(Run(noise_stats=ns))
 
     for selection_function in selection_functions:

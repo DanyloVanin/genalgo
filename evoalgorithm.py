@@ -8,10 +8,12 @@ from statlib.reproduction_stats import ReproductionStats
 from run import Run
 from functions import *
 from constants import *
+import copy
 
 
 class EvoAlgorithm:
-    def __init__(self, initial_population: Population, selection_function, fitness_function, mutation_enabled=False, crossover_enabled=False):
+    def __init__(self, initial_population: Population, selection_function, fitness_function, mutation_enabled=False,
+                 crossover_enabled=False):
         self.population: Population = initial_population
         self.population.mutation_enabled = mutation_enabled
         self.population.crossover_enabled = crossover_enabled
@@ -36,9 +38,8 @@ class EvoAlgorithm:
         converged = self.population.is_converged()
 
         while not converged and self.iteration < MAX_ITERATIONS:
-            if self.iteration < iterations_to_plot:
+            if self.iteration < iterations_to_plot and run_number < RUNS_TO_PLOT:
                 # Print genotypes and fenotypes distribution plots
-                # TODO look deeper into logic
                 self.population.print_fenotypes_distribution(folder_name, self.selection_function.__class__.__name__,
                                                              run_number + 1, self.iteration + 1)
                 self.population.print_genotypes_distribution(folder_name, self.selection_function.__class__.__name__,
@@ -52,7 +53,7 @@ class EvoAlgorithm:
             # Keys after selection
             keys_after_selection = self.population.get_keys_list()
             not_selected_chromosomes = set(keys_before_selection) - set(keys_after_selection)
-            # TODO check if working
+            # Mutation and crossover
             self.population.mutate(self.fitness_function)
             self.population.crossover(self.fitness_function)
             # Fitness STD
@@ -66,7 +67,8 @@ class EvoAlgorithm:
             self.selection_diff_stats.s_list.append(fs - f)
             # Get number of individuals with the best genotype
             num_of_best = self.population.get_chromosomes_copies_count(best_genotype)
-            # Швидкість репродукції або коефіцієнт плідності RR – частка особин популяції, яких було обрано до батьківського пулу.
+            # Швидкість репродукції або коефіцієнт плідності RR – частка особин популяції, яких було обрано до
+            # батьківського пулу.
             number_of_individuals = len(self.population.individuals)
             self.reproduction_stats.rr_list.append(1 - (len(not_selected_chromosomes) / number_of_individuals))
             # TODO find out more about the next statistics
@@ -99,12 +101,16 @@ class EvoAlgorithm:
             self.pressure_stats.NI = self.iteration
 
         # Print genotypes and fenotypes after the finish
-        self.population.print_fenotypes_distribution(folder_name, self.selection_function.__class__.__name__, run_number + 1,
+        # TODO decide if we want to print final distribution
+        self.population.print_fenotypes_distribution(folder_name, self.selection_function.__class__.__name__,
+                                                     run_number + 1,
                                                      self.iteration)
-        self.population.print_genotypes_distribution(folder_name, self.selection_function.__class__.__name__, run_number + 1,
+        self.population.print_genotypes_distribution(folder_name, self.selection_function.__class__.__name__,
+                                                     run_number + 1,
                                                      self.iteration + 1, self.fitness_function)
-        # Час поглинання (takeover time) τ – мінімальна кількість поколінь, за якої ГА, застосовуючи тільки оператор відбору,
-        # перетворює початкову популяцію на однорідну популяцію копій найкращої особини (початкова популяція має містити одну копію цієї особини).
+        # Час поглинання (takeover time) τ – мінімальна кількість поколінь, за якої ГА, застосовуючи тільки оператор
+        # відбору, перетворює початкову популяцію на однорідну популяцію копій найкращої особини (початкова популяція
+        # має містити одну копію цієї особини).
         self.pressure_stats.takeover_time = self.iteration
         # F_found – коефіцієнт пристосованості найкращого ланцюжка в фінальній популяції
         self.pressure_stats.f_found = self.population.get_max_fitness()
@@ -122,34 +128,36 @@ class EvoAlgorithm:
         ff_name = self.fitness_function.__class__.__name__
         if ff_name == 'FConstALL' or ff_name == 'FHD':
             if self.population.mutation_enabled:
-                return self.population.is_converged() and self.population.get_chromosomes_copies_count(self.fitness_function.get_optimal().code) / len(self.population.individuals) >= SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE
+                return self.population.is_converged() and self.population.get_chromosomes_copies_count(
+                    self.fitness_function.get_optimal().code) / len(
+                    self.population.individuals) >= SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE
             else:
                 return self.population.is_converged()
         else:
-            return self.population.is_converged() and any([self.fitness_function.check_chromosome_success(p) for p in self.population.individuals])
+            return self.population.is_converged() and any(
+                [self.fitness_function.check_chromosome_success(p) for p in self.population.individuals])
 
+    def calculate_noise(self, initial_population: Population, selection_function, fitness_function,
+                        mutation_enabled=False, crossover_enabled=False):
+        # TODO finish the function
+        # Enable/disable mutation and crossover
+        initial_population.mutation_enabled = mutation_enabled
+        initial_population.crossover_enabled = crossover_enabled
 
-    # @staticmethod
-    # def calculate_noise(sf):
-    #     pop = Fconst().generate_population(N, 100, 0)
-    #     population = Population(pop.chromosomes.copy(), pop.p_m)
-    #     iteration = 0
-    #     stop = 1000 if 'Disruptive' in sf.__class__.__name__ else G
-    #
-    #     if type(sf) == BlendedRWS or type(sf) == BlendedSUS:
-    #         sf.attempts = 0
-    #     elif type(sf) == WindowRWS or type(sf) == WindowSUS:
-    #         sf.fh_worst_list = []
-    #
-    #     while not population.estimate_convergence() and iteration < stop:
-    #         population = sf.select(population)
-    #         iteration += 1
-    #
-    #     ns = NoiseStats()
-    #
-    #     if population.estimate_convergence():
-    #         ns.NI = iteration
-    #         ns.conv_to = population.chromosomes[0].code[0]
-    #
-    #     return ns
+        iteration = 0
+        while not initial_population.is_converged() and iteration < MAX_RUNS:
+            initial_population = selection_function.select(initial_population)
+            # Mutation and convergence
+            initial_population.mutate(fitness_function)
+            initial_population.crossover(fitness_function)
+            iteration += 1
+
+        # Gather noise statistics
+        ns = NoiseStats()
+
+        if initial_population.is_converged():
+            ns.NI = iteration
+            ns.conv_to = initial_population.chromosomes[0].code[0]
+
+        return ns
 # %%

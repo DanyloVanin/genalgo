@@ -4,6 +4,7 @@ import os
 
 
 def save_line_plot(fitness_func_name, func_name, data, file_name, y_label, iteration):
+    # TODO should pass population size dynamically
     path = 'stats/' + fitness_func_name + '/' + str(DEFAULT_POPULATION_SIZE) + '/' + func_name + '/' + str(iteration)
 
     if not os.path.exists(path):
@@ -19,6 +20,7 @@ def save_line_plot(fitness_func_name, func_name, data, file_name, y_label, itera
 
 
 def save_lines_plot(fitness_func_name, func_name, data_arr, label_arr, file_name, y_label, iteration):
+    # TODO should pass population size dynamically
     path = 'stats/' + fitness_func_name + '/' + str(DEFAULT_POPULATION_SIZE) + '/' + func_name + '/' + str(iteration)
 
     if not os.path.exists(path):

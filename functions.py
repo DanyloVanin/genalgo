@@ -43,7 +43,7 @@ class FHD:
 
     def generate_optimal(self):
         # optimal for FHD is all zeroes, genotype is length*delta
-        return Individual(np.zeros((self.length,), dtype=int), self.length * self.delta)
+        return Individual('0'*self.length, self.length * self.delta)
 
     def get_optimal(self):
         return self.generate_optimal()

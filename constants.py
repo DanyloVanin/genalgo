@@ -1,10 +1,14 @@
-env = 'not_test'
+env = 'test'
 
 # Number of individuals in population
 DEFAULT_POPULATION_SIZE = 100
 
 # Max number of iterations
 MAX_ITERATIONS = 100
+
+#
+RUNS_TO_PLOT = 5
+ITERATIONS_TO_PLOT = 5
 
 # Used for double equality comparison
 EPS = 0.0001

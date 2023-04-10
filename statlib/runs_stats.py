@@ -104,14 +104,17 @@ class RunsStats:
     def calculate_convergence_stats(self, successful_runs):
         convergence_iterations = [run.pressure_stats.NI for run in successful_runs]
         if len(convergence_iterations) > 0:
+            # відповідно мінімальна, максимальна та середня кількість ітерацій до збіжності
             self.min_NI = min(convergence_iterations)
             self.max_NI = max(convergence_iterations)
             self.avg_NI = mean(convergence_iterations)
+            # стандартне відхилення для NI.
             self.sigma_NI = sigma(convergence_iterations)
 
     def calculate_i_stats(self, successful_runs):
         i_min_list = [run.pressure_stats.i_min for run in successful_runs]
         if len(i_min_list) > 0:
+            # мінімальне значенн, стандартне відхилення, середнє значення
             self.min_I_min = min(i_min_list)
             self.sigma_I_min = sigma(i_min_list)
             self.avg_I_min = mean(i_min_list)
@@ -165,9 +168,11 @@ class RunsStats:
             self.sigma_rr_avg = sigma(rr_avg_list)
         ni_rr_min_list = [run.reproduction_stats.ni_rr_min for run in successful_runs]
         if len(ni_rr_min_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_rr_min = min(ni_rr_min_list)
         ni_rr_max_list = [run.reproduction_stats.ni_rr_max for run in successful_runs]
         if len(ni_rr_max_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_rr_max = max(ni_rr_max_list)
 
     def calculate_teta_stats(self, successful_runs):
@@ -187,9 +192,11 @@ class RunsStats:
             self.sigma_teta_avg = sigma(teta_avg_list)
         ni_teta_min_list = [run.reproduction_stats.ni_teta_min for run in successful_runs]
         if len(ni_teta_min_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_teta_min = min(ni_teta_min_list)
         ni_teta_max_list = [run.reproduction_stats.ni_teta_max for run in successful_runs]
         if len(ni_teta_max_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_teta_max = max(ni_teta_max_list)
 
     def calculate_s_stats(self, successful_runs):
@@ -206,9 +213,11 @@ class RunsStats:
             self.avg_s_avg = mean(s_avg_list)
         ni_s_min_list = [run.selection_diff_stats.ni_s_min for run in successful_runs]
         if len(ni_s_min_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_s_min = min(ni_s_min_list)
         ni_s_max_list = [run.selection_diff_stats.ni_s_max for run in successful_runs]
         if len(ni_s_max_list) > 0:
+            # TODO wrong iteration calculation = need not min iteration, but iteration corresponding to min value
             self.NI_s_max = max(ni_s_max_list)
 
     def as_dict(self):
