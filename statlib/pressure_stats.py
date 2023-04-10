@@ -48,9 +48,9 @@ class PressureStats:
             self.i_avg = mean(nni)
 
     def calculate_growth_rate_coefficients(self):
-        if len(self.grs) > 0:
+        if len(self.grs) > 0 :
             # відповідно рання та середня швидкості росту
-            self.gre = self.grs[1]  # iteration = 2, therefor index is 1
+            self.gre = self.grs[0]  # iteration = 2, therefor index is 1
             self.gra = mean(self.grs)
 
     def calculate(self):

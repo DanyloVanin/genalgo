@@ -1,4 +1,4 @@
-env = 'test'
+env = 'prod'
 
 # Number of individuals in population
 DEFAULT_POPULATION_SIZE = 100
