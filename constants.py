@@ -1,13 +1,10 @@
-env = 'test'
+env = 'not_test'
 
 # Number of individuals in population
-N = 100
+DEFAULT_POPULATION_SIZE = 100
 
 # Max number of iterations
 MAX_ITERATIONS = 100
-
-
-MUTATION_LOW_LIMIT = 10
 
 # Used for double equality comparison
 EPS = 0.0001
@@ -16,10 +13,12 @@ EPS = 0.0001
 # за наявності мутації: ідентифіковано збіжність алгоритму ТА >=90% особин фінальної популяції є копіями оптимального ланцюжка.
 SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE = 0.9
 
-DESIRED_GENE_HOMOGENEITY_LEVEL = 0.99 # not used yet
+# Used to identify convergence in case of mutation.
+# Shows percentage of desired homogenous genes
+DESIRED_GENE_HOMOGENEITY_LEVEL = 0.99
 
-# Number of runs done
-MAX_RUNS = 5 if env == 'test' else 10
+# Number of runs done per each parameter set
+MAX_RUNS = 10 if env == 'test' else 100
 
 # Used to estimate correctness of results: expected - actual <= DELTA for y, SIGMA for x
 SIGMA = 0.01

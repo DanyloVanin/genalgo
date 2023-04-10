@@ -11,8 +11,10 @@ from constants import *
 
 
 class EvoAlgorithm:
-    def __init__(self, initial_population: Population, selection_function, fitness_function):
+    def __init__(self, initial_population: Population, selection_function, fitness_function, mutation_enabled=False, crossover_enabled=False):
         self.population: Population = initial_population
+        self.population.mutation_enabled = mutation_enabled
+        self.population.crossover_enabled = crossover_enabled
         self.selection_function = selection_function
         self.fitness_function = fitness_function
         # self.optimal = optimal
@@ -108,6 +110,7 @@ class EvoAlgorithm:
         self.pressure_stats.f_found = self.population.get_max_fitness()
         # F_avg – середній коефіцієнт пристосованості в фінальній популяції
         self.pressure_stats.f_avg = self.population.get_mean_fitness()
+        # Calculating pressure, reproduction and selection data
         self.pressure_stats.calculate()
         self.reproduction_stats.calculate()
         self.selection_diff_stats.calculate()
@@ -119,12 +122,11 @@ class EvoAlgorithm:
         ff_name = self.fitness_function.__class__.__name__
         if ff_name == 'FConstALL' or ff_name == 'FHD':
             if self.population.mutation_enabled:
-                # TODO could possibly not be working because of strange list logic for genotypes
                 return self.population.is_converged() and self.population.get_chromosomes_copies_count(self.fitness_function.get_optimal().code) / len(self.population.individuals) >= SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE
             else:
                 return self.population.is_converged()
         else:
-            self.population.is_converged() and any([self.fitness_function.check_chromosome_success(p) for p in self.population.individuals])
+            return self.population.is_converged() and any([self.fitness_function.check_chromosome_success(p) for p in self.population.individuals])
 
 
     # @staticmethod

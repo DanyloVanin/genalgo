@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from constants import DESIRED_GENE_HOMOGENEITY_LEVEL
 from individual import Individual
-from constants import N, DESIRED_GENE_HOMOGENEITY_LEVEL
 
 
 def all_the_same(elements):
+    # Works by counting how many times the first item appears in the list
     return len(elements) < 1 or len(elements) == elements.count(elements[0])
 
 
@@ -29,6 +30,7 @@ def verify_genes_homogeneity(chromosomes):
 MUTATION_TABLE = {
     # L, N   : P_mutation
     # L = 10, N = ...
+    (10, 10): 0.01,  # TODO remove, used just for test
     (10, 100): 0.0005,
     (10, 200): 0.0005 / 2,
     (10, 300): 0.0005 / 3,
@@ -50,12 +52,13 @@ class Population:
         self.individuals = chromosomes
         self.fitness_list = [chromosome.fitness for chromosome in self.individuals]
         # TODO Why is genotype converted into list from string?
-        self.genotypes_list = [list(x.code) for x in self.individuals]
+        self.genotypes_list = [x.code for x in self.individuals]
         self.mutation_enabled = mutation_enabled
         self.crossover_enabled = crossover_enabled
 
     def print_fenotypes_distribution(self, folder_name, func_name, run, iteration):
-        path = 'stats/' + folder_name + '/' + str(N) + '/' + func_name + '/' + str(run) + '/fenotypes'
+        path = 'stats/' + folder_name + '/' + str(len(self.individuals)) + '/' + func_name + '/' + str(
+            run) + '/fenotypes'
 
         if not os.path.exists(path):
             os.makedirs(path)
@@ -65,13 +68,14 @@ class Population:
         plt.close()
 
     def print_genotypes_distribution(self, folder_name, func_name, run, iteration, fitness_func):
-        path = 'stats/' + folder_name + '/' + str(N) + '/' + func_name + '/' + str(run) + '/genotypes'
+        path = 'stats/' + folder_name + '/' + str(len(self.individuals)) + '/' + func_name + '/' + str(
+            run) + '/genotypes'
 
         if not os.path.exists(path):
             os.makedirs(path)
 
         # TODO temporary fix for genotype being list and not str
-        x_list = [(fitness_func.get_genotype_value(''.join(code))) for code in self.genotypes_list]
+        x_list = [(fitness_func.get_genotype_value(code)) for code in self.genotypes_list]
         sns.displot(x_list)
         plt.savefig(path + '/' + str(iteration) + '.png')
         plt.close()
@@ -96,10 +100,14 @@ class Population:
 
         # randomly change bits in each chromosome
         for chromosome in self.individuals:
+            chromosome_code_list = list(chromosome.code)
             for i in range(0, len(chromosome.code)):
                 if random.random() < mutation_probability:
-                    chromosome.code[i] = int(not chromosome.code[i])
+                    # had to play around with the list, because cannot assign to specific index of str
+                    chromosome_code_list[i] = "0" if chromosome_code_list[i] == "1" else "1"
+                    chromosome.code = ''.join(chromosome_code_list)
                     chromosome.fitness = fitness_function.estimate(chromosome.code)
+
         self.update()
 
     # Perform crossover
@@ -108,7 +116,7 @@ class Population:
         if not self.crossover_enabled:
             return
 
-        next_chromosomes = []
+        next_individuals = []
 
         chromosomes = self.individuals.copy()
 
@@ -127,13 +135,13 @@ class Population:
             child1_code = chromosome1_code[:crossover_point] + chromosome2_code[crossover_point:]
             child2_code = chromosome2_code[:crossover_point] + chromosome1_code[crossover_point:]
 
-            next_chromosomes.append(
-                Individual(child1_code, fitness_function.estimate(child1_code), len(next_chromosomes)))
-            next_chromosomes.append(
-                Individual(child2_code, fitness_function.estimate(child2_code), len(next_chromosomes)))
+            next_individuals.append(
+                Individual(child1_code, fitness_function.estimate(child1_code), len(next_individuals)+1))
+            next_individuals.append(
+                Individual(child2_code, fitness_function.estimate(child2_code), len(next_individuals)+1))
 
-        assert (len(chromosomes) == len(next_chromosomes))
-        self.individuals = next_chromosomes
+        assert (len(self.individuals) == len(next_individuals))
+        self.individuals = next_individuals
         self.update()
 
     def get_mean_fitness(self):
@@ -161,8 +169,7 @@ class Population:
 
     def update(self):
         self.fitness_list = [chromosome.fitness for chromosome in self.individuals]
-        # TODO genotype as list again
-        self.genotypes_list = [list(x.code) for x in self.individuals]
+        self.genotypes_list = [x.code for x in self.individuals]
 
     def update_rws(self, probabilities):
         self.individuals = [np.random.choice(self.individuals, p=probabilities) for _ in

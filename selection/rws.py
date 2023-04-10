@@ -91,7 +91,8 @@ class WindowRWS:
         if len(self.fh_worst_list) < self.h:
             self.fh_worst_list.append(min(population.fitness_list))
         else:
-            self.fh_worst_list[1] = min(population.fitness_list)
+            self.fh_worst_list.pop(0)
+            self.fh_worst_list.append(min(population.fitness_list))
 
         fh_worst = min(self.fh_worst_list)
         scaled_fitness = []

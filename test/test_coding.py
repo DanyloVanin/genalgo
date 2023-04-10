@@ -1,6 +1,5 @@
 import pytest
 
-from coding import *
 from codec import *
 
 

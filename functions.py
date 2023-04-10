@@ -1,7 +1,6 @@
 import numpy as np
 
 from codec import *
-from coding import *
 from individual import Individual
 from population_factory import PopulationFactory
 from constants import DELTA, SIGMA
@@ -12,6 +11,9 @@ class FConstALL:
         self.length = 100
 
     def estimate(self, _):
+        return 100
+
+    def get_genotype_value(self, chromosome_code):
         return 100
 
     def generate_optimal(self):

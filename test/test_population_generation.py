@@ -1,8 +1,5 @@
 import pytest
 
-from coding import *
-from codec import *
-from population_factory import PopulationFactory
 from functions import *
 
 

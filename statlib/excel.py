@@ -1,4 +1,4 @@
-from constants import N
+from constants import DEFAULT_POPULATION_SIZE
 import xlsxwriter
 import math
 import os
@@ -22,14 +22,14 @@ def save_to_excel_internal(sheet, dictionary, col_num = 1, row_num = 2, print_ke
 
 
 def save_to_excel(runs_dictionary, selection_func_name):
-    path = 'stats/' + selection_func_name + '/' + str(N)
+    path = 'stats/' + selection_func_name + '/' + str(DEFAULT_POPULATION_SIZE)
 
     if not os.path.exists(path):
         os.makedirs(path)
 
-    workbook = xlsxwriter.Workbook(path + '/' + selection_func_name + '_' + str(N) + '_data.xlsx')
+    workbook = xlsxwriter.Workbook(path + '/' + selection_func_name + '_' + str(DEFAULT_POPULATION_SIZE) + '_data.xlsx')
     worksheet = workbook.add_worksheet()
-    worksheet.name = str(N)
+    worksheet.name = str(DEFAULT_POPULATION_SIZE)
     func_num = 1
     items_len = len(runs_dictionary)
     merge_format = workbook.add_format({
@@ -67,14 +67,14 @@ def save_to_excel(runs_dictionary, selection_func_name):
 
 
 def save_noise_to_excel(runs_dictionary, selection_func_name):
-    path = 'stats/' + selection_func_name + '/' + str(N)
+    path = 'stats/' + selection_func_name + '/' + str(DEFAULT_POPULATION_SIZE)
 
     if not os.path.exists(path):
         os.makedirs(path)
 
-    workbook = xlsxwriter.Workbook(path + '/' + selection_func_name + '_' + str(N) + '_data.xlsx')
+    workbook = xlsxwriter.Workbook(path + '/' + selection_func_name + '_' + str(DEFAULT_POPULATION_SIZE) + '_data.xlsx')
     worksheet = workbook.add_worksheet()
-    worksheet.name = str(N)
+    worksheet.name = str(DEFAULT_POPULATION_SIZE)
     func_num = 1
     items_len = len(runs_dictionary)
     merge_format = workbook.add_format({
@@ -110,12 +110,12 @@ def save_noise_to_excel(runs_dictionary, selection_func_name):
 
 
 def save_avg_to_excel(func_runs_dictionary, noise_runs_dictionary):
-    path = 'stats/AVG/' + str(N)
+    path = 'stats/AVG/' + str(DEFAULT_POPULATION_SIZE)
     if not os.path.exists(path):
         os.makedirs(path)
     workbook = xlsxwriter.Workbook(path + '/data.xlsx')
     worksheet = workbook.add_worksheet()
-    worksheet.name = str(N)
+    worksheet.name = str(DEFAULT_POPULATION_SIZE)
     merge_format = workbook.add_format({
         'bold': 1,
         'border': 1,
