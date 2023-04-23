@@ -2,9 +2,11 @@ env = 'prod'
 
 # Number of individuals in population
 DEFAULT_POPULATION_SIZE = 100
+N = DEFAULT_POPULATION_SIZE
+LOG = True
 
 # Max number of iterations
-MAX_ITERATIONS = 100
+MAX_ITERATIONS = 10000
 
 #
 RUNS_TO_PLOT = 5
@@ -22,9 +24,12 @@ SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE = 0.9
 DESIRED_GENE_HOMOGENEITY_LEVEL = 0.99
 
 # Number of runs done per each parameter set
-MAX_RUNS = 10 if env == 'test' else 100
+MAX_RUNS = 3 if env == 'test' else 100
 
 # Used to estimate correctness of results: expected - actual <= DELTA for y, SIGMA for x
 SIGMA = 0.01
 DELTA = 0.01
+
+# Zero estimation for floating point
+ZERO = 0.00000001
 # %%

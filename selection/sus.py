@@ -1,9 +1,9 @@
-from constants import MAX_ITERATIONS
+from constants import MAX_ITERATIONS, ZERO
 from population import Population
 from numpy import random
 from statistics import mean
 import math
-
+import numpy as np
 
 # TODO a lot depends on validity of this method, have to check correctness
 def basic_sus(population: Population, total_fitness, fitness_scale: []):
@@ -44,57 +44,6 @@ class SUS:
         return population
 
 
-# class DisruptiveSUS:
-#     @staticmethod
-#     def disruptive_sus(population: Population):
-#         total_fitness = 0
-#         fitness_scale = []
-#         f_avg = mean(population.fitness_list)
-#
-#         for index, individual in enumerate(population.chromosomes):
-#             individual_scaled_fitness = abs(individual.fitness - f_avg)
-#             total_fitness += individual_scaled_fitness
-#             if index == 0:
-#                 fitness_scale.append(individual_scaled_fitness)
-#             else:
-#                 fitness_scale.append(individual_scaled_fitness + fitness_scale[index - 1])
-#
-#         mating_pool = basic_sus(population, total_fitness, fitness_scale)
-#         population.update_chromosomes(mating_pool)
-#
-#         return population
-#
-#     def select(self, population):
-#         return self.disruptive_sus(population)
-
-
-# class BlendedSUS:
-#     def __init__(self):
-#         self.attempts = 0
-#
-#     def blended_sus(self, population: Population):
-#         total_fitness = 0
-#         fitness_scale = []
-#
-#         for index, individual in enumerate(population.chromosomes):
-#             individual_scaled_fitness = individual.fitness / (G + 1 - self.attempts)
-#             total_fitness += individual_scaled_fitness
-#             if index == 0:
-#                 fitness_scale.append(individual_scaled_fitness)
-#             else:
-#                 fitness_scale.append(individual_scaled_fitness + fitness_scale[index - 1])
-#
-#         mating_pool = basic_sus(population, total_fitness, fitness_scale)
-#         population.update_chromosomes(mating_pool)
-#
-#         return population
-#
-#     def select(self, population):
-#         population = self.blended_sus(population)
-#         self.attempts = self.attempts + 1
-#         return population
-
-
 class WindowSUS:
     def __init__(self, h: int):
         self.fh_worst_list = []
@@ -113,9 +62,10 @@ class WindowSUS:
 
         # Get the worst fitness from window
         fh_worst = min(self.fh_worst_list)
-
+        all_same = all([x.fitness-fh_worst < ZERO for x in population.individuals])
+        PADDING = 0.0001 if all_same else 0
         for index, individual in enumerate(population.individuals):
-            individual_scaled_fitness = individual.fitness - fh_worst
+            individual_scaled_fitness = individual.fitness - fh_worst + PADDING
             total_fitness += individual_scaled_fitness
             if index == 0:
                 fitness_scale.append(individual_scaled_fitness)
@@ -123,7 +73,9 @@ class WindowSUS:
                 # We are building numeric line, where we will then use points to indicate probability ranges
                 fitness_scale.append(individual_scaled_fitness + fitness_scale[index - 1])
 
+
         mating_pool = basic_sus(population, total_fitness, fitness_scale)
+
         population.update_chromosomes(mating_pool)
 
         return population

@@ -21,62 +21,6 @@ class RWS:
         return self.rws(population)
 
 
-# class DisruptiveRWS:
-#     @staticmethod
-#     def disruptive_rws(population: Population):
-#         population_fitness = sum(population.fitness_list)
-#
-#         if population_fitness == 0:
-#             return population
-#
-#         f_avg = mean(population.fitness_list)
-#         scaled_fitness = []
-#
-#         for chromosome in population.chromosomes:
-#             scaled_fitness.append(abs(chromosome.fitness - f_avg))
-#
-#         sf_sum = sum(scaled_fitness)
-#         if sf_sum > 0:
-#             probabilities = [sf/sf_sum for sf in scaled_fitness]
-#         else:
-#             population_fitness = sum(population.fitness_list)
-#             probabilities = [chromosome.fitness/population_fitness for chromosome in population.chromosomes]
-#         population.update_rws(probabilities)
-#
-#         return population
-#
-#     def select(self, population):
-#         return self.disruptive_rws(population)
-
-
-# class BlendedRWS:
-#     def __init__(self):
-#         self.attempts = 0
-#
-#     def blended_rws(self, population: Population):
-#         population_fitness = sum(population.fitness_list)
-#
-#         if population_fitness == 0:
-#             return population
-#
-#         scaled_fitness = []
-#
-#         for chromosome in population.chromosomes:
-#             scaled_value = chromosome.fitness / (G + 1 - self.attempts)
-#             scaled_fitness.append(scaled_value)
-#
-#         sf_sum = sum(scaled_fitness)
-#         probabilities = [sf/sf_sum for sf in scaled_fitness]
-#         population.update_rws(probabilities)
-#
-#         return population
-#
-#     def select(self, population):
-#         population = self.blended_rws(population)
-#         self.attempts = self.attempts + 1
-#         return population
-
-
 class WindowRWS:
     def __init__(self, h: int):
         self.fh_worst_list = []
@@ -130,7 +74,7 @@ class ExpScaledRWS:
         scaled_fitness = []
 
         for chromosome in population.individuals:
-            scaled_value = math.pow(chromosome.fitness, self.k)
+            scaled_value = chromosome.fitness ** self.k
             scaled_fitness.append(scaled_value)
 
         sf_sum = sum(scaled_fitness)
@@ -142,6 +86,7 @@ class ExpScaledRWS:
             population_fitness = sum(population.fitness_list)
             probabilities = [chromosome.fitness / population_fitness for chromosome in population.individuals]
 
+        assert abs(sum(probabilities) - 1.0) <= 0.000001
         # TODO should probably move that method out of Population class
         population.update_rws(probabilities)
 
@@ -152,7 +97,7 @@ class ExpScaledRWS:
 
 
 class WindowRWS_2H(WindowRWS):
-    def __init__(self, h= 2):
+    def __init__(self, h=2):
         super().__init__(h)
 
 

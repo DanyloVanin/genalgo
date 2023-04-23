@@ -31,12 +31,12 @@ MUTATION_TABLE = {
     # L, N   : P_mutation
     # L = 10, N = ...
     (10, 10): 0.01,  # TODO remove, used just for test
-    (10, 100): 0.0005,
-    (10, 200): 0.0005 / 2,
-    (10, 300): 0.0005 / 3,
-    (10, 400): 0.0005 / 4,
-    (10, 500): 0.0005 / 5,
-    (10, 1000): 0.00005,
+    (10, 100): 0.0001,
+    (10, 200): 0.0001 / 2,
+    (10, 300): 0.0001 / 3,
+    (10, 400): 0.0001 / 4,
+    (10, 500): 0.0001 / 5,
+    (10, 1000): 0.00001,
     # L = 100, N = ..
     (100, 100): 0.00001,
     (100, 200): 0.00001 / 2,
@@ -51,7 +51,6 @@ class Population:
     def __init__(self, chromosomes, mutation_enabled=False, crossover_enabled=False):
         self.individuals = chromosomes
         self.fitness_list = [chromosome.fitness for chromosome in self.individuals]
-        # TODO Why is genotype converted into list from string?
         self.genotypes_list = [x.code for x in self.individuals]
         self.mutation_enabled = mutation_enabled
         self.crossover_enabled = crossover_enabled
@@ -79,6 +78,13 @@ class Population:
         sns.displot(x_list)
         plt.savefig(path + '/' + str(iteration) + '.png')
         plt.close()
+
+    def all_phenotypes_same(self):
+        phenotypes = [individual.code for individual in self.individuals]
+        return all_the_same(phenotypes)
+
+    def is_all_same_genotype(self):
+        return all_the_same(self.genotypes_list)
 
     def is_converged(self):
         # За відсутності мутації: збіжність популяції в одну точку або проведення 10 000 000 ітерацій.
@@ -134,11 +140,13 @@ class Population:
             crossover_point = int(random.random() * len(chromosome1_code))
             child1_code = chromosome1_code[:crossover_point] + chromosome2_code[crossover_point:]
             child2_code = chromosome2_code[:crossover_point] + chromosome1_code[crossover_point:]
+            assert (len(parent1.code) == len(child1_code))
+            assert (len(parent2.code) == len(child2_code))
 
             next_individuals.append(
-                Individual(child1_code, fitness_function.estimate(child1_code), len(next_individuals)+1))
+                Individual(child1_code, fitness_function.estimate(child1_code), len(next_individuals) + 1))
             next_individuals.append(
-                Individual(child2_code, fitness_function.estimate(child2_code), len(next_individuals)+1))
+                Individual(child2_code, fitness_function.estimate(child2_code), len(next_individuals) + 1))
 
         assert (len(self.individuals) == len(next_individuals))
         self.individuals = next_individuals
@@ -172,14 +180,25 @@ class Population:
         self.genotypes_list = [x.code for x in self.individuals]
 
     def update_rws(self, probabilities):
-        self.individuals = [np.random.choice(self.individuals, p=probabilities) for _ in
-                            range(0, len(self.individuals))]
+        new_individuals = []
+        for _ in range(0, len(self.individuals)):
+            random_individual = np.random.choice(self.individuals, p=probabilities)
+            new_individual = Individual(random_individual.code, random_individual.fitness, random_individual.key)
+            new_individuals.append(new_individual)
+        self.individuals = new_individuals
         self.update()
 
     def update_chromosomes(self, chromosomes):
         self.individuals = chromosomes
         self.update()
 
-    def __copy__(self):
-        return Population(self.individuals.copy(), self.mutation_enabled, self.crossover_enabled)
+    def create_copy(self):
+        copy_individuals = []
+        for i in self.individuals:
+            copy_individual = Individual(i.code, i.fitness, i.key)
+            copy_individuals.append(copy_individual)
+        return Population(copy_individuals, self.mutation_enabled, self.crossover_enabled)
+
+    # def __copy__(self):
+    #     return Population(self.individuals.copy(), self.mutation_enabled, self.crossover_enabled)
 # %%
