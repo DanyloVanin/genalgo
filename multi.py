@@ -16,11 +16,11 @@ selection_methods = testing_sm if env == 'test' else release_sm
 
 test_functions = [
     (FConstALL(), selection_methods, 'FConstALL', DEFAULT_POPULATION_SIZE),
-    (FHD(), selection_methods, 'FHD_100', DEFAULT_POPULATION_SIZE),
-    (Fx2(), selection_methods, 'Fx2_gray', DEFAULT_POPULATION_SIZE),
-    (F5122subx2(), selection_methods, 'F5122subx2_gray', DEFAULT_POPULATION_SIZE),
-    (Fx2(is_gray=False), selection_methods, 'Fx2_bin', DEFAULT_POPULATION_SIZE),
-    (F5122subx2(is_gray=False), selection_methods, 'F5122subx2_bin', DEFAULT_POPULATION_SIZE),
+    # (FHD(), selection_methods, 'FHD_100', DEFAULT_POPULATION_SIZE),
+    # (Fx2(), selection_methods, 'Fx2_gray', DEFAULT_POPULATION_SIZE),
+    # (F5122subx2(), selection_methods, 'F5122subx2_gray', DEFAULT_POPULATION_SIZE),
+    # (Fx2(is_gray=False), selection_methods, 'Fx2_bin', DEFAULT_POPULATION_SIZE),
+    # (F5122subx2(is_gray=False), selection_methods, 'F5122subx2_bin', DEFAULT_POPULATION_SIZE),
 ]
 
 functions = test_functions
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     results = {}
     noise_results = {}
 
-    with Pool(6) as p:
+    with Pool(1) as p:
         res_list = p.starmap(main, functions)
 
         for res in res_list:
