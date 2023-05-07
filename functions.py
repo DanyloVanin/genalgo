@@ -1,13 +1,26 @@
-import numpy as np
 import os
 
-from codec import *
 import matplotlib.pyplot as plt
-from individual import Individual
-from population_factory import PopulationFactory
-from constants import DELTA, SIGMA, N
-from population import Population
+import numpy as np
 
+import constants
+from codec import *
+from constants import DELTA, SIGMA, N
+from individual import Individual
+from population import Population
+from population_factory import PopulationFactory
+
+
+def get_y_ticks():
+    y_ticks_step = 5
+    if constants.DEFAULT_POPULATION_SIZE == 200:
+        y_ticks_step = 10
+    elif constants.DEFAULT_POPULATION_SIZE == 300:
+        y_ticks_step = 15
+    elif constants.DEFAULT_POPULATION_SIZE == 400:
+        y_ticks_step = 20
+    y_ticks = list(range(0, constants.DEFAULT_POPULATION_SIZE+1, y_ticks_step))
+    return y_ticks
 
 def _draw_fitness_histogram(
         population: Population,
@@ -15,19 +28,31 @@ def _draw_fitness_histogram(
         func_name: str,
         run: int,
         iteration: int,
+        bins=None,
+        xticks=None,
+        yticks=None
 ) -> None:
     dir_path = f"stats/{folder_name}/{N}/{func_name}/{run}/fitness"
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    plt.figure()
-    plt.hist(population.fitness_list, bins=100, color="green", histtype="bar", rwidth=1)
+    if bins is None:
+        bins = 100
+
+    plt.figure(figsize=(20, 10))
+    plt.hist(population.fitness_list, bins=bins, color="green", histtype="bar", rwidth=1)
+    # TODO масштабування графіку кращого здоровя по У - має бути від 0 до якогось максимального числа
 
     # x-axis label
     plt.xlabel("Health")
     # frequency label
     plt.ylabel("Num of individuals")
     # plot title
+    if yticks is not None:
+        plt.yticks(yticks)
+
+    if xticks is not None:
+        plt.xticks(xticks)
 
     plt.title("Fitness of individuals")
     plt.savefig(f"{dir_path}/{iteration}.png")
@@ -42,23 +67,34 @@ def _draw_phenotype_histogram(
         func_name: str,
         run: int,
         iteration: int,
-        phenotypes
+        phenotypes,
+        bins=None,
+        xticks=None,
+        yticks=None
 ) -> None:
     dir_path = f"stats/{folder_name}/{N}/{func_name}/{run}/genotypes"
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
-    plt.figure()
-    plt.hist(phenotypes, bins=100, color="red", histtype="bar", rwidth=None)
+    if bins is None:
+        bins = 100
+
+    plt.figure(figsize=(20, 10))
+    plt.hist(phenotypes, bins=bins, color="red", histtype="bar", rwidth=None)
 
     # x-axis label
     plt.xlabel("Genotype value")
     # frequency label
     plt.ylabel("Num of individual")
     # plot title
-
+    # yticks = range(0, constants.DEFAULT_POPULATION_SIZE)
+    # plt.yticks(yticks)
     plt.title("Genotypes of individuals")
+    if yticks is not None:
+        plt.yticks(yticks)
 
+    if xticks is not None:
+        plt.xticks(xticks)
     plt.savefig(f"{dir_path}/{iteration}.png")
     plt.close()
 
@@ -69,6 +105,9 @@ def _draw_count_ones_in_genotype_histogram(
         func_name: str,
         run: int,
         iteration: int,
+        bins=None,
+        xticks=None,
+        yticks=None
 ) -> None:
     dir_path = f"stats/{folder_name}/{N}/{func_name}/{run}/ones_in_genotypes"
     if not os.path.exists(dir_path):
@@ -78,9 +117,11 @@ def _draw_count_ones_in_genotype_histogram(
         chromosome.code.count('1')
         for chromosome in population.individuals
     ]
-    bins = 100
 
-    plt.figure()
+    if bins is None:
+        bins = 100
+
+    plt.figure(figsize=(20, 10))
     plt.hist(
         ones, bins, color="red", histtype="bar", rwidth=1
     )
@@ -89,6 +130,14 @@ def _draw_count_ones_in_genotype_histogram(
     plt.xlabel("Ones in genotype")
     # frequency label
     plt.ylabel("Num of individual")
+
+    if yticks is not None:
+        plt.yticks(yticks)
+
+    if xticks is not None:
+        plt.xticks(xticks)
+    # yticks = range(0, constants.DEFAULT_POPULATION_SIZE)
+    # plt.yticks(yticks)
     # plot title
     plt.title("Number of ones in chromosome")
 
@@ -109,7 +158,7 @@ class FConstALL:
 
     def generate_optimal(self):
         # All chromosomes are good, no difference
-        return Individual('0'*self.length, 100)
+        return Individual('0' * self.length, 100)
 
     def get_optimal(self):
         return self.generate_optimal()
@@ -125,9 +174,19 @@ class FConstALL:
             run: int,
             iteration: int,
     ) -> None:
+        chromosome_length = 100
+        chromosome_step = 5
+
+        # ONES
+        ones_bins = list(range(0, chromosome_length + 2, chromosome_step))
+        x_ticks = list(range(0, chromosome_length + 2, chromosome_step))
+
+        y_ticks = get_y_ticks()
+
         _draw_count_ones_in_genotype_histogram(
-            population, folder_name, func_name, run, iteration
+            population, folder_name, func_name, run, iteration, ones_bins, x_ticks, y_ticks
         )
+
 
 class FHD:
     def __init__(self):
@@ -162,9 +221,27 @@ class FHD:
             run: int,
             iteration: int,
     ) -> None:
+        chromosome_length = 100
+        chromosome_step = 5
+
+        # ONES
+        ones_bins = list(range(0, chromosome_length + 2, chromosome_step))
+        x_ticks = list(range(0, chromosome_length + 2, chromosome_step))
+
+        y_ticks = get_y_ticks()
+
         _draw_count_ones_in_genotype_histogram(
-            population, folder_name, func_name, run, iteration
+            population, folder_name, func_name, run, iteration, ones_bins, x_ticks, y_ticks
         )
+
+        # Drawing fitness
+        fitness_step = 250
+        bins = list(dict.fromkeys(list(np.arange(0, 10000, fitness_step)) + [0, 10000]))
+        bins.sort()
+        x_ticks = list(dict.fromkeys(list(np.arange(0, 10000, fitness_step)) + [0, 10000]))
+        x_ticks.sort()
+        _draw_fitness_histogram(population, folder_name, func_name, run, iteration, bins, x_ticks, y_ticks)
+
 
 
 class Fx2:
@@ -224,17 +301,41 @@ class Fx2:
             run: int,
             iteration: int,
     ) -> None:
+        chromosome_length = 10
+        chromosome_step = 1
+
+        # ONES
+        ones_bins = list(range(0, chromosome_length+2, chromosome_step))
+        x_ticks = list(range(0, chromosome_length+2, chromosome_step))
+
+        y_ticks = get_y_ticks()
+
         _draw_count_ones_in_genotype_histogram(
-            population, folder_name, func_name, run, iteration
+            population, folder_name, func_name, run, iteration, ones_bins, x_ticks, y_ticks
         )
-        _draw_fitness_histogram(population, folder_name, func_name, run, iteration)
+
+        # Drawing fitness
+        fitness_step = 5
+        bins = list(dict.fromkeys(list(np.arange(0, self.optimum_y, fitness_step)) + [0, self.optimum_y]))
+        bins.sort()
+        x_ticks = list(dict.fromkeys(list(np.arange(0, self.optimum_y, fitness_step)) + [0, self.optimum_y]))
+        x_ticks.sort()
+        _draw_fitness_histogram(population, folder_name, func_name, run, iteration, bins, x_ticks, y_ticks)
+
+        # Drawing phenotype
         phenotypes = [
             self.get_genotype_value(chromosome.code)
             for chromosome in population.individuals
         ]
+        phenotype_step = 0.5
+        bins = list(dict.fromkeys(list(np.arange(0, self.optimum_x+phenotype_step, phenotype_step)) + [0,  self.optimum_x]))
+        bins.sort()
+        x_ticks = list(dict.fromkeys(list(np.arange(0,  self.optimum_x+phenotype_step, phenotype_step)) + [0,  self.optimum_x]))
+        x_ticks.sort()
         _draw_phenotype_histogram(
-            self.a, self.b, population, folder_name, func_name, run, iteration, phenotypes
+            self.a, self.b, population, folder_name, func_name, run, iteration, phenotypes, bins, x_ticks, y_ticks
         )
+
 
 class F5122subx2:
 
@@ -294,14 +395,39 @@ class F5122subx2:
             run: int,
             iteration: int,
     ) -> None:
+
+        chromosome_length = 10
+        chromosome_step = 1
+
+        # ONES
+        ones_bins = list(range(0, chromosome_length+2, chromosome_step))
+        x_ticks = list(range(0, chromosome_length+2, chromosome_step))
+
+        y_ticks = get_y_ticks()
+
         _draw_count_ones_in_genotype_histogram(
-            population, folder_name, func_name, run, iteration
+            population, folder_name, func_name, run, iteration, ones_bins, x_ticks, y_ticks
         )
-        _draw_fitness_histogram(population, folder_name, func_name, run, iteration)
+
+        # Drawing fitness
+        fitness_step = 5
+        bins = list(dict.fromkeys(list(np.arange(0, self.optimum_y, fitness_step)) + [0, self.optimum_y]))
+        bins.sort()
+        x_ticks = list(dict.fromkeys(list(np.arange(0, self.optimum_y, fitness_step)) + [0, self.optimum_y]))
+        x_ticks.sort()
+        _draw_fitness_histogram(population, folder_name, func_name, run, iteration, bins, x_ticks, y_ticks)
+
+        # Drawing phenotype
         phenotypes = [
             self.get_genotype_value(chromosome.code)
             for chromosome in population.individuals
         ]
+        phenotype_step = 0.5
+        bins = list(dict.fromkeys(list(np.arange(-5.12, 5.12+phenotype_step, phenotype_step)) + [0,  self.optimum_x, -5.12, 5.11]))
+        bins.sort()
+        x_ticks = list(dict.fromkeys(list(np.arange(-5.12, 5.12+phenotype_step, phenotype_step)) + [0,  self.optimum_x, -5.12, 5.11]))
+        x_ticks.sort()
         _draw_phenotype_histogram(
-            self.a, self.b, population, folder_name, func_name, run, iteration, phenotypes
+            self.a, self.b, population, folder_name, func_name, run, iteration, phenotypes, bins, x_ticks, y_ticks
         )
+

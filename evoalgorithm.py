@@ -76,8 +76,8 @@ class EvoAlgorithm:
                 PressureStats.calculate_intensity(self.population.get_mean_fitness(), f, f_std_parent))
 
             # Mutation and crossover
-            self.population.mutate(self.fitness_function)
             self.population.crossover(self.fitness_function)
+            self.population.mutate(self.fitness_function)
 
             # Fitness STD
             f_std = self.population.get_fitness_std()
@@ -89,7 +89,10 @@ class EvoAlgorithm:
 
             # кількість (частка) копій найкращої (!!!ОПТИМАЛЬНОЇ!!!) особини.
             num_of_optimal = self.population.get_chromosomes_copies_count(self.best)
-            self.pressure_stats.num_of_best.append(num_of_optimal)
+            best_genotype_not_optimal = self.population.get_best_genotype()
+
+            self.pressure_stats.num_of_best.append(self.population.get_chromosomes_copies_count(best_genotype_not_optimal))
+            self.pressure_stats.num_of_optimal.append(num_of_optimal)
 
             # найкраще значення здоров’я популяції. (важливо бачити, чи втрачався оптимальний розв’язок)
             self.pressure_stats.f_best.append(self.population.get_max_fitness())
@@ -109,7 +112,7 @@ class EvoAlgorithm:
 
             # Growth rate
             # пізню (обчислюється, коли кількість копій найкращої особини сягає 50%) швидкість росту.
-            best_genotype = self.population.get_best_genotype()
+            best_genotype = self.best
             num_best_genotype = self.population.get_chromosomes_copies_count(best_genotype)
             self.reproduction_stats.best_rr_list.append(num_best_genotype / number_of_individuals)
             if num_best_genotype >= number_of_individuals / 2 and self.pressure_stats.grl is None:
@@ -122,13 +125,14 @@ class EvoAlgorithm:
             self.pressure_stats.NI = self.iteration
 
         # Print genotypes and fenotypes after the finish
-        self.fitness_function.draw_histograms(
-            population=self.population,
-            folder_name=folder_name,
-            func_name=self.selection_function.__class__.__name__,
-            run=run_number + 1,
-            iteration=self.iteration + 1,
-        )
+        if run_number < RUNS_TO_PLOT:
+            self.fitness_function.draw_histograms(
+                population=self.population,
+                folder_name=folder_name,
+                func_name=self.selection_function.__class__.__name__,
+                run=run_number + 1,
+                iteration=self.iteration + 1,
+            )
 
         # Час поглинання (takeover time) τ – мінімальна кількість поколінь, за якої ГА, застосовуючи тільки оператор
         # відбору, перетворює початкову популяцію на однорідну популяцію копій найкращої особини (початкова популяція
@@ -139,15 +143,13 @@ class EvoAlgorithm:
         # F_avg – середній коефіцієнт пристосованості в фінальній популяції
         self.pressure_stats.f_avg = self.population.get_mean_fitness()
 
-        if is_const_function:
-            pass
         # Calculating pressure, reproduction and selection data
         self.pressure_stats.calculate()
         self.reproduction_stats.calculate()
         self.selection_diff_stats.calculate()
 
         # Check if Run was successful
-        is_successful = self.check_success() if converged else False
+        is_successful = self.check_success()
 
         return Run(avg_fitness_list, std_fitness_list, best_fitness_list, self.pressure_stats, self.reproduction_stats,
                    self.selection_diff_stats, None, is_successful)
@@ -158,7 +160,7 @@ class EvoAlgorithm:
         if ff_name == 'FConstALL' or ff_name == 'FHD':
             # за наявності мутації: ідентифіковано збіжність алгоритму ТА >=90% особин фінальної популяції є копіями оптимального ланцюжка.
             if self.population.mutation_enabled:
-                return self.population.is_converged() and self.population.get_chromosomes_copies_count(
+                return self.population.is_converged() and 100*self.population.get_chromosomes_copies_count(
                     self.fitness_function.get_optimal().code) / len(
                     self.population.individuals) >= SUCCESSFUL_RUN_OPTIMAL_GENOTYPE_RATE
             else:

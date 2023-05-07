@@ -17,8 +17,9 @@ def save_run_plots(ff_name, sf_name, run, run_number):
                        'selection difference', run_number + 1)
         save_lines_plot(ff_name, sf_name, [run.pressure_stats.intensities, run.selection_diff_stats.s_list],
                         ['Intensity', 'EvoAlgorithm diff'],
-                    'intensity_and_sel_diff' + str(run_number + 1), 'Intensity + EvoAlgorithm diff', run_number + 1)
-        save_line_plot(ff_name, sf_name, run.pressure_stats.grs, 'gr' + str(run_number + 1), 'growth rate', run_number + 1)
+                        'intensity_and_sel_diff' + str(run_number + 1), 'Intensity + EvoAlgorithm diff', run_number + 1)
+        save_line_plot(ff_name, sf_name, run.pressure_stats.grs, 'gr' + str(run_number + 1), 'growth rate',
+                       run_number + 1)
         save_line_plot(ff_name, sf_name, run.reproduction_stats.best_rr_list, 'best_rr' + str(run_number + 1),
                        'best chromosome rate', run_number + 1)
     save_lines_plot(ff_name, sf_name, [run.reproduction_stats.rr_list,
@@ -27,6 +28,7 @@ def save_run_plots(ff_name, sf_name, run, run_number):
                     'repro_rate_and_loss_of_diversity' + str(run_number + 1), 'Reproduction rate + Loss of diversity',
                     run_number + 1)
     save_line_plot(ff_name, sf_name, run.best_fitness_list, 'f_best' + str(run_number + 1), 'f best', run_number + 1)
+
 
 def main(fitness_function, selection_functions: [], file_name, population_size):
     p_start = time.time()
@@ -58,9 +60,11 @@ def main(fitness_function, selection_functions: [], file_name, population_size):
                     # Running the algorithm
                     population_copy = p.create_copy()
                     if LOG:
-                        print(f'Run #{i}: [{ff_name}]-[{sf_name}]-[mutate: {mutation_enabled}]-[crossover: {crossover_enabled}]')
+                        print(
+                            f'Run #{i}: [{ff_name}]-[{sf_name}]-[mutate: {mutation_enabled}]-[crossover: {crossover_enabled}]')
                     current_run = EvoAlgorithm(population_copy, selection_function(), fitness_function,
-                                               mutation_enabled, crossover_enabled).run(i, folder_name, ITERATIONS_TO_PLOT)
+                                               mutation_enabled, crossover_enabled).run(i, folder_name,
+                                                                                        ITERATIONS_TO_PLOT)
 
                     if i < RUNS_TO_PLOT:
                         # TODO rewrite for proper and consistent scaling

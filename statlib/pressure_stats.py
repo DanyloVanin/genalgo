@@ -5,6 +5,7 @@ from constants import EPS
 class PressureStats:
     def __init__(self):
         self.num_of_best = []
+        self.num_of_optimal = []
         self.f_best = []
         self.grs = []
         self.intensities = []

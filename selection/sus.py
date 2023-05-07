@@ -14,13 +14,19 @@ def basic_sus(population: Population, total_fitness, fitness_scale: []):
     current_fitness_pointer = random_offset
     last_fitness_scale_position = 0
 
+    # Iterating to get individual
     for _ in range(len(population.individuals)):
         for fitness_scale_position in range(last_fitness_scale_position, len(fitness_scale)):
+
             if fitness_scale[fitness_scale_position] >= current_fitness_pointer:
                 mating_pool.append(population.individuals[fitness_scale_position])
                 last_fitness_scale_position = fitness_scale_position
                 break
         current_fitness_pointer += fitness_step
+        # Added to prevent overriding
+        if current_fitness_pointer > total_fitness:
+            current_fitness_pointer = current_fitness_pointer % total_fitness
+            last_fitness_scale_position = 0
 
     return mating_pool
 

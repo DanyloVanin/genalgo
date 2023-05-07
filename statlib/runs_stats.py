@@ -83,6 +83,9 @@ class RunsStats:
 
     def calculate(self, calculate_noise=False):
         self.calculate_noise = calculate_noise
+        # Actually can be removed, makes sense for testing
+        if len(self.runs) < 1:
+            return
         # Calculating percentage of successful runs
         successful_runs = [run for run in self.runs if run.is_successful]
         self.success_percentage = (len(successful_runs) / len(self.runs)) * 100
