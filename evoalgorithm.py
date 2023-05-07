@@ -1,3 +1,4 @@
+import constants
 from constants import *
 from population import Population
 from run import Run
@@ -30,6 +31,7 @@ class EvoAlgorithm:
 
     def run(self, run_number, folder_name, iterations_to_plot):
         is_const_function = 'FConstALL' in self.fitness_function.__class__.__name__
+        is_fx512_function = 'F512' in self.fitness_function.__class__.__name__
         if is_const_function:
             return self._run_noise(run_number, folder_name, iterations_to_plot)
         avg_fitness_list = [self.population.get_mean_fitness()]
@@ -39,6 +41,13 @@ class EvoAlgorithm:
         converged = self.population.is_converged()
 
         while not converged and self.iteration < MAX_ITERATIONS:
+            if is_const_function:
+                if self.iteration >= constants.FCONST_MAX_ITERATIONS:
+                    break
+            if is_fx512_function:
+                if self.iteration >= constants.F512_MAX_ITERATIONS:
+                    break
+
             if self.iteration < iterations_to_plot and run_number < RUNS_TO_PLOT:
                 # Print genotypes and fenotypes distribution plots
                 self.fitness_function.draw_histograms(
