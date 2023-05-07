@@ -191,8 +191,11 @@ class EvoAlgorithm:
         avg_fitness_list = [self.population.get_mean_fitness()]
         std_fitness_list = [self.population.get_fitness_std()]
         best_fitness_list = [self.population.get_max_fitness()]
-
+        is_sus_selection = 'SUS' in self.selection_function.__class__.__name__
         while not converged and self.iteration < MAX_ITERATIONS:
+            if is_sus_selection:
+                if self.iteration >= constants.SUS_FCONST_ITERATIONS:
+                    break
             if self.iteration < iterations_to_plot and run_number < RUNS_TO_PLOT:
                 # Print genotypes and fenotypes distribution plots
                 self.fitness_function.draw_histograms(
